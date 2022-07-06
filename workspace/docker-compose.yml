@@ -1,0 +1,26 @@
+version: '2'
+networks: 
+  weiqi_dev: 
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.110.0/24
+services: 
+  weiqi_core:
+    image: u03013112/weiqi_core:v1
+    container_name: 'weiqi_core'
+    tty: true
+    volumes:
+        - ../core:/core:cached
+    working_dir: /core/
+    # network_mode: host
+    ports:
+      - 0.0.0.0:8088:8080
+    networks:
+      - weiqi_dev
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"
+  
