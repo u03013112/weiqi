@@ -13,6 +13,7 @@ async def test(request):
     return web.json_response(outData)
 
 async def start(request):
+    global core
     core = Core8X8()
     outData = core.getStatus()    
     return web.json_response(outData)
