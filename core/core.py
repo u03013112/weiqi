@@ -1,9 +1,17 @@
+import sys
+sys.path.append('/core')
+
+from log import Log
 
 class Core8X8:
     def __init__(self):
         self.startGame()
+        self.log = Log()
 
     def startGame(self):
+        # for log
+        self.steps = []
+
         qipan = [
             [0,0,0,0,0,0,0,0],
             [0,0,0,0,0,0,0,0],
@@ -49,6 +57,8 @@ class Core8X8:
             # 暂时只有这两个状态可以下子
             return
         status['qipan'][x][y] = a
+        self.steps.append([x,y])
+
         # log here，暂时没想好应该怎么记录，可能最简单的记录方式是只记录下一步下在哪了
         # 开始检测提子或者胜利
         self.killCheck()
@@ -58,6 +68,9 @@ class Core8X8:
             status['status'] = 'turn2'
         elif status['status'] == 'turn2':
             status['status'] = 'turn1'
+
+        if status['status'] == 'win1' or status['status'] == 'win2':
+            self.log.log(self.steps)
     # 获得相连的所有棋子，这个逻辑太过复杂，暂时递归
     def getNeighbor(self,x,y,chan):
         status = self.status
