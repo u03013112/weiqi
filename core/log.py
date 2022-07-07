@@ -3,7 +3,7 @@
 # 然后尝试指定文件名，每次都是添加在最后面，append
 # 文件分割什么的暂时手动处理
 class Log:
-    def __init__(self,filename='/root/log.txt'):
+    def __init__(self,filename='/log/log.txt'):
         self.filename = filename
         
     def log(self,steps):

@@ -12,6 +12,7 @@ services:
     tty: true
     volumes:
         - ../core:/core:cached
+        - ../log:/log:cached
     working_dir: /core/
     # network_mode: host
     ports:
