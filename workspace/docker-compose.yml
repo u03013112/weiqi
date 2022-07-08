@@ -40,4 +40,19 @@ services:
         max-size: "10m"
         max-file: "1"
   
+  weiqi_ai:
+    image: tensorflow/tensorflow:latest
+    container_name: 'weiqi_ai'
+    tty: true
+    volumes:
+        - ../ai:/ai:cached
+        - ../log:/log:cached
+    working_dir: /ai/
+    networks:
+      - weiqi_dev
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "1"
   
