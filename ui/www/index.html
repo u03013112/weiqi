@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Go</title>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+        <script src="https://cdn.staticfile.org/vue-resource/1.5.1/vue-resource.min.js"></script>
+        <link rel="stylesheet" href="style.css">
+    </head>
+
+    <body>
+        <div id="weiqi">
+            <div id="chessboard" class="chessboard">
+            </div>
+            <div style="height: 3rem;"></div>
+            <div v-if="status == 'turn1'">该黑旗下了</div>
+            <div v-if="status == 'turn2'">该白旗下了</div>
+            <div v-if="status == 'win1'">黑旗赢了</div>
+            <div v-if="status == 'win2'">白旗赢了</div>
+            <div>黑旗得分 {{ score1 }}</div>
+            <div>白旗得分 {{ score2 }}</div>
+            <button v-on:click="start()">start</button>
+            <div>标准围棋规则，先提3子的获胜</div>
+        </div>
+        <script src="weiqi.js"></script>
+    </body>
+</html>

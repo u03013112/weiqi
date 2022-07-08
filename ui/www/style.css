@@ -1,0 +1,27 @@
+html {
+    font-size: 20px;
+}
+
+.chessboard {
+    position: relative;
+    box-shadow: .1rem .1rem .05rem rgba(0, 0, 0, .5),
+        -.1rem -.1rem .05rem rgba(0, 0, 0, .5);
+    height: calc(7rem + 0.04rem);
+    width: calc(7rem + 0.04rem);
+    background: #daca39;
+    background-image: -webkit-linear-gradient(white 0.04rem, transparent 0), -webkit-linear-gradient(left, white 0.04rem, transparent 0);
+    background-image: linear-gradient(white 0.04rem, transparent 0), linear-gradient(90deg, white 0.04rem, transparent 0);
+    -webkit-background-size: 1rem 1rem;
+    background-size: 1rem 1rem;
+    left: .5rem;
+    top: .5rem;
+}
+
+.chess {
+    position: absolute;
+    height: 0.95rem;
+    width: 0.95rem;
+    border-radius: 0.5rem;
+    /* -webkit-box-shadow: .01rem .01rem .1rem rgba(0, 0, 0, .5), 0 0 .05rem rgba(240, 240, 240, .5), .05rem .05rem .01rem rgba(255, 255, 255, .15) inset, .1rem .1rem .1rem rgba(255, 255, 255, .05) inset, -.05rem -.05rem .25rem rgba(0, 0, 0, .15) inset, -.1rem -.1rem .35rem rgba(0, 0, 0, .05) inset;
+    box-shadow: .01rem .01rem .1rem rgba(0, 0, 0, .5), 0 0 .05rem rgba(240, 240, 240, .5), .05rem .05rem .01rem rgba(255, 255, 255, .15) inset, .1rem .1rem .1rem rgba(255, 255, 255, .05) inset, -.05rem -.05rem .25rem rgba(0, 0, 0, .15) inset, -.1rem -.1rem .35rem rgba(0, 0, 0, .05) inset; */
+}
