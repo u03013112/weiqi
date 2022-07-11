@@ -92,15 +92,16 @@ if __name__ == "__main__":
         lastReward = 0
         for time in range(500):
             # color == 0 的时候是黑色的，否则是白色的
-            color = time%2
+            # 目前这个有问题，因为有下子重复问题
+            # color = time%2
 
             action = agent.act(state)
             allowActions = env.getAllActions(stateRaw)
-            while True:
-                if action in allowActions:
-                    break
-                else:
-                    action = agent.act(state)
+            
+            if action not in allowActions:
+                # 如果下在不正确的位置上直接惩罚
+                agent.memorize(state,action,-1,state,False)
+                continue        
                     
             # 这是一个简单的范例，用于测试下面逻辑是否正确
             # 5,3;5,4;4,2;4,5;5,5;4,3;6,4;6,3;4,4;
