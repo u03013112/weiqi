@@ -57,11 +57,11 @@ class DQNAgent:
             target = reward
             if not done:
                 target = (reward + self.gamma *
-                          np.amax(self.model.predict(next_state)[0]))
+                          np.amax(self.tModel.predict(next_state)[0]))
             target_f = self.model.predict(state)
             target_f[0][action] = target
             # self.model.fit(state, target_f, epochs=1, verbose=0)
-            self.model.fit(state, target_f, epochs=1, verbose=1)
+            self.model.fit(state, target_f, epochs=1, verbose=0)
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     agent = DQNAgent(state_size, action_size)
     # agent.load("./save/cartpole-dqn.h5")
     done = False
-    batch_size = 32
+    batch_size = 128
 
     for e in range(EPISODES):
         state,stateRaw = env.reset()
@@ -129,10 +129,6 @@ if __name__ == "__main__":
                     # memWhite.append([state,action,reward,next_state,done])
                 agent.memorize(state,action,reward,next_state,done)
                 break
-
-            if len(agent.memory) > batch_size:
-                agent.replay(batch_size)
-
             lastAction = action
             lastState = state
             lastReward = reward
@@ -140,8 +136,9 @@ if __name__ == "__main__":
             stateRaw = next_stateRaw
         print(e,time)
         # 虽然但是还是每局结束学习一次把，ddqn再改进，先跑跑看
-        
-        if e % 20 == 0:
+        if len(agent.memory) > batch_size:
+            agent.replay(batch_size)
+        if e % 5 == 0:
             agent.update_tModel()
             agent.save("/ai/mod/dqn.h5")
         # print(agent.memory)
