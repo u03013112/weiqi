@@ -112,18 +112,18 @@ if __name__ == "__main__":
         totalRewardBlack = 0
         totalRewardWhite = 0
         for time in range(500):
-            action = agent.act(state)
-            allowActions = env.getAllActions(stateRaw)
+            # action = agent.act(state)
+            # allowActions = env.getAllActions(stateRaw)
             
-            if action not in allowActions:
-                # 如果下在不正确的位置上直接惩罚
-                agent.memorize(state,action,-100,state,False)
-                continue        
+            # if action not in allowActions:
+            #     # 如果下在不正确的位置上直接惩罚
+            #     agent.memorize(state,action,-100,state,False)
+            #     continue        
                     
             # 这是一个简单的范例，用于测试下面逻辑是否正确
             # 5,3;5,4;4,2;4,5;5,5;4,3;6,4;6,3;4,4;
-            # actions = [[5,3],[5,4],[4,2],[4,5],[5,5],[4,3],[6,4],[6,3],[4,4]]
-            # action = actions[time][0]*8+actions[time][1]
+            actions = [[5,3],[5,4],[4,2],[4,5],[5,5],[4,3],[6,4],[6,3],[4,4]]
+            action = actions[time][0]*8+actions[time][1]
 
             next_state, reward, done, next_stateRaw = env.step(action)
             # reward = reward if not done else -10
@@ -171,4 +171,4 @@ if __name__ == "__main__":
             agent.update_tModel()
             agent.save("/ai/mod/dqn.h5")
             print('update_tModel')
-        # print(agent.memory)
+        print(agent.memory)

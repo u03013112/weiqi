@@ -21,6 +21,10 @@
             <div>白旗得分 {{ score2 }}</div>
             <button v-on:click="start()">start</button>
             <div>标准围棋规则，先提3子的获胜</div>
+            <div>
+                <input v-model="pos" placeholder="x,y">
+                <button v-on:click="test()">test</button>
+            </div>
         </div>
         <script src="weiqi.js"></script>
     </body>

@@ -5,7 +5,8 @@ window.weiqi = new Vue({
         status: '',
         score1: 0,
         score2: 0,
-        outText: ''
+        outText: '',
+        pos: ''
     },
     methods: {
         reflushQiPan: function () {
@@ -72,6 +73,12 @@ window.weiqi = new Vue({
                     this.outText = '请求失败处理';
                 });
             }
+        },
+        test:function () {
+            a = this.pos.split(',');
+            x = parseInt(a[0]);
+            y = parseInt(a[1]);
+            this.do(x,y);
         }
     }
 })
