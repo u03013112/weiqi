@@ -13,16 +13,16 @@ sys.path.append('/ai')
 
 from env import Env
 
-EPISODES = 5000
+EPISODES = 1
 
 class DQNAgent:
     def __init__(self, state_size, action_size):
         self.state_size = state_size
         self.action_size = action_size
-        self.memory = deque(maxlen=2000)
+        self.memory = deque(maxlen=20000)
         
         self.gamma = 0.8    # discount rate
-        self.epsilon = 0.5  # exploration rate
+        self.epsilon = 1.0  # exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
         self.learning_rate = 0.001
@@ -46,25 +46,45 @@ class DQNAgent:
         self.memory.append((state, action, reward, next_state, done))
 
     def act(self, state):
+        s = state.reshape(1, self.state_size)
         if np.random.rand() <= self.epsilon:
             return random.randrange(self.action_size)
-        act_values = self.model.predict(state)
+        act_values = self.model.predict(s)
         return np.argmax(act_values[0])  # returns action
 
     def replay(self, batch_size):
-        minibatch = random.sample(self.memory, batch_size)
-        for state, action, reward, next_state, done in minibatch:
+        # minibatch = random.sample(self.memory, batch_size)
+        # for state, action, reward, next_state, done in minibatch:
+        #     target = reward
+        #     if not done:
+        #         target = (reward + self.gamma *
+        #                   np.amax(self.tModel.predict(next_state)[0]))
+        #     target_f = self.model.predict(state)
+        #     target_f[0][action] = target
+        #     # self.model.fit(state, target_f, epochs=1, verbose=0)
+        #     history = self.model.fit(state, target_f, epochs=1, verbose=0)
+        #     print(history.history['loss'])
+        # if self.epsilon > self.epsilon_min:
+        #     self.epsilon *= self.epsilon_decay
+        
+        data = random.sample(self.memory, batch_size)
+        # 生成Q_target。
+        states = np.array([d[0] for d in data])
+        next_states = np.array([d[3] for d in data])
+
+        y = self.model.predict(states)
+        q = self.tModel.predict(next_states)
+
+        for i, (_, action, reward, _, done) in enumerate(data):
             target = reward
             if not done:
-                target = (reward + self.gamma *
-                          np.amax(self.tModel.predict(next_state)[0]))
-            target_f = self.model.predict(state)
-            target_f[0][action] = target
-            # self.model.fit(state, target_f, epochs=1, verbose=0)
-            history = self.model.fit(state, target_f, epochs=1, verbose=0)
-            print(history['loss'])
+                target += self.gamma * np.amax(q[i])
+            y[i][action] = target
+        
+        loss = self.model.train_on_batch(states, y)
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
+        return loss
 
     def load(self, name):
         self.model.load_weights(name)
@@ -84,24 +104,20 @@ if __name__ == "__main__":
 
     for e in range(EPISODES):
         state,stateRaw = env.reset()
-        state = np.reshape(state, [1, state_size])
-        # 每一盘做两套mem，为了可以将奖励往回传
-        memBlack = []
-        memWhite = []
+        # 上来就是黑色
+        color = 1
         lastState = None
         lastAction = None
         lastReward = 0
+        totalRewardBlack = 0
+        totalRewardWhite = 0
         for time in range(500):
-            # color == 0 的时候是黑色的，否则是白色的
-            # 目前这个有问题，因为有下子重复问题
-            # color = time%2
-
             action = agent.act(state)
             allowActions = env.getAllActions(stateRaw)
             
             if action not in allowActions:
                 # 如果下在不正确的位置上直接惩罚
-                agent.memorize(state,action,-1,state,False)
+                agent.memorize(state,action,-100,state,False)
                 continue        
                     
             # 这是一个简单的范例，用于测试下面逻辑是否正确
@@ -111,7 +127,6 @@ if __name__ == "__main__":
 
             next_state, reward, done, next_stateRaw = env.step(action)
             # reward = reward if not done else -10
-            next_state = np.reshape(next_state, [1, state_size])
             # agent.memorize(state, action, reward, next_state, done)
             
             if lastAction:
@@ -124,24 +139,36 @@ if __name__ == "__main__":
                 agent.memorize(lastState,lastAction,lastReward - reward,next_state,done)
             
             if done:
-                # if color == 0:
-                    # 如果现在是下黑色，那么代表黑色的操作导致游戏结束，直接给这次操作奖励
-                    # memBlack.append([state,action,reward,next_state,done])
-                # else:
-                    # memWhite.append([state,action,reward,next_state,done])
                 agent.memorize(state,action,reward,next_state,done)
+                
+                if color == 1:
+                    totalRewardBlack += reward    
+                else:
+                    totalRewardWhite += reward
                 break
             lastAction = action
             lastState = state
             lastReward = reward
             state = next_state
             stateRaw = next_stateRaw
-        print(e,time)
+            # change color
+            if color == 1:
+                totalRewardBlack += reward
+                color = 2
+            else:
+                totalRewardWhite += reward
+                color = 1
+
+        historyLoss = []
         # 虽然但是还是每局结束学习一次把，ddqn再改进，先跑跑看
         if len(agent.memory) > batch_size:
-            for i in range(10):
-                agent.replay(batch_size)
+            for i in range(5):
+                loss = agent.replay(batch_size)
+                historyLoss.append(loss)
+        print(e,'black score:',totalRewardBlack,'white score:',totalRewardWhite,time,historyLoss)
+        
         if e % 5 == 0:
             agent.update_tModel()
             agent.save("/ai/mod/dqn.h5")
+            print('update_tModel')
         # print(agent.memory)
