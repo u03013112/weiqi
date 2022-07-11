@@ -32,9 +32,11 @@ class Env:
         # 1、目前自己所有子
         qipanNp = np.array(qipan)
         qipanNpSelf = qipanNp.copy()
+        qipanNpSelf[qipanNpSelf==selfColor]=1
         qipanNpSelf[qipanNpSelf==oppoColor]=0
         # 2、目前对方所有子
         qipanNpOppo = qipanNp.copy()
+        qipanNpOppo[qipanNpOppo==oppoColor]=-1
         qipanNpOppo[qipanNpOppo==selfColor]=0
         # TODO：暂时先做两个，后面的确实比较麻烦
         ret = np.concatenate((qipanNpSelf,qipanNpOppo))
@@ -42,14 +44,23 @@ class Env:
         # 拍平
         return ret.reshape(-1)
 
+    # 返回两个值，一个处理后为了机器学习，一个原始为了getAllActions
     def reset(self):
+        self.lastBlackReward = 0
+        self.lastWhiteReward = 0
         r = requests.get('http://weiqi_core:8080/start')
         status = r.json()
-        return self.getState(status)
+        return self.getState(status),status
 
     # 获得所有可以落子的地方，如果是不能落子的地方，就直接给一个惩罚吧
     def getAllActions(self,status):
-        return
+        actions = []
+        qipan = status['qipan']
+        for x in range(8):
+            for y in range(8):
+                if qipan[x][y] == 0:
+                    actions.append(x*8+y)
+        return actions
 
     # return next_state, reward, done, _
     def step(self,action):
@@ -65,11 +76,24 @@ class Env:
         }
         r = requests.post('http://weiqi_core:8080/do', json=body,headers=headers)
         status = r.json()
-        return self.getState(status)
+
+        reward = 0
+        if status['status'] == 'turn1':
+            reward = status['score1'] - self.lastBlackReward
+        if status['status'] == 'turn2':
+            reward = status['score2'] - self.lastWhiteReward
+        self.lastBlackReward = status['score1']
+        self.lastWhiteReward = status['score2']
+        done = False
+        if status['status'] == 'win1' or status['status'] == 'win2':    
+            # 只有下最后一步的人才能赢，这里简单处理，为了防止自杀，core需要补上自杀可能bug
+            # 如果之后有认输，再重新考虑
+            reward += 100
+            done = True
+        # 第四个返回值到底是干啥的，先借用一下
+        return self.getState(status),reward,done,status
 
 if __name__ == '__main__':
     env = Env()
-    env.reset()
-    env.step(0)
-    env.step(1)
-    env.step(2)
+    _,s = env.reset()
+    print(env.getAllActions(s))
