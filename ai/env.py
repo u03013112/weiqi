@@ -32,12 +32,12 @@ class Env:
         # 1、目前自己所有子
         qipanNp = np.array(qipan)
         qipanNpSelf = qipanNp.copy()
-        qipanNpSelf[qipanNpSelf==selfColor]=1
         qipanNpSelf[qipanNpSelf==oppoColor]=0
+        qipanNpSelf[qipanNpSelf==selfColor]=1
         # 2、目前对方所有子
         qipanNpOppo = qipanNp.copy()
-        qipanNpOppo[qipanNpOppo==oppoColor]=-1
         qipanNpOppo[qipanNpOppo==selfColor]=0
+        qipanNpOppo[qipanNpOppo==oppoColor]=-1
         # TODO：暂时先做两个，后面的确实比较麻烦
         ret = np.concatenate((qipanNpSelf,qipanNpOppo))
         
@@ -79,9 +79,9 @@ class Env:
 
         reward = 0
         if status['status'] == 'turn1':
-            reward = (status['score1'] - self.lastBlackReward)*10
-        if status['status'] == 'turn2':
             reward = (status['score2'] - self.lastWhiteReward)*10
+        if status['status'] == 'turn2':
+            reward = (status['score1'] - self.lastBlackReward)*10
         self.lastBlackReward = status['score1']
         self.lastWhiteReward = status['score2']
         done = False
@@ -95,5 +95,9 @@ class Env:
 
 if __name__ == '__main__':
     env = Env()
-    _,s = env.reset()
-    print(env.getAllActions(s))
+    s,sr = env.reset()
+    env.step(43)
+    env.step(44)
+    _,r,_,_ = env.step(34)
+    print(r)
+    # print(env.getAllActions(s))
