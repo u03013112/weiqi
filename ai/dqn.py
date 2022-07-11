@@ -22,7 +22,7 @@ class DQNAgent:
         self.memory = deque(maxlen=2000)
         
         self.gamma = 0.8    # discount rate
-        self.epsilon = 5.0  # exploration rate
+        self.epsilon = 0.5  # exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
         self.learning_rate = 0.001
@@ -61,7 +61,8 @@ class DQNAgent:
             target_f = self.model.predict(state)
             target_f[0][action] = target
             # self.model.fit(state, target_f, epochs=1, verbose=0)
-            self.model.fit(state, target_f, epochs=1, verbose=0)
+            history = self.model.fit(state, target_f, epochs=1, verbose=0)
+            print(history['loss'])
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
@@ -138,7 +139,8 @@ if __name__ == "__main__":
         print(e,time)
         # 虽然但是还是每局结束学习一次把，ddqn再改进，先跑跑看
         if len(agent.memory) > batch_size:
-            agent.replay(batch_size)
+            for i in range(10):
+                agent.replay(batch_size)
         if e % 5 == 0:
             agent.update_tModel()
             agent.save("/ai/mod/dqn.h5")
