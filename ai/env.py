@@ -79,9 +79,9 @@ class Env:
 
         reward = 0
         if status['status'] == 'turn1':
-            reward = status['score1'] - self.lastBlackReward
+            reward = (status['score1'] - self.lastBlackReward)*10
         if status['status'] == 'turn2':
-            reward = status['score2'] - self.lastWhiteReward
+            reward = (status['score2'] - self.lastWhiteReward)*10
         self.lastBlackReward = status['score1']
         self.lastWhiteReward = status['score2']
         done = False
