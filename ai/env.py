@@ -1,16 +1,18 @@
 # 与core连接，为ai提供env
 # 争取做到和gym类似，这样可以较为快速的试用现成代码看效果
+import gym
+from gym import spaces
+
 import requests
 import numpy as np
 
-class ActionSpace:
-    def __init__(self,n):
-        self.n = n
-
-class Env:
+class Env(gym.Env):
     def __init__(self):
-        self.observation_space = np.zeros(128)
-        self.action_space = ActionSpace(64)
+        super(Env, self).__init__()
+        self.action_space = spaces.Discrete(64)
+        # 暂时简单处理
+        self.observation_space = spaces.Box(low=0, high=255,shape=(8,8,3), dtype=np.uint8)
+
 
     # 将core返回的status变换成标准的state，需要做什么转换都在这里进行
     def getState(self,status):
@@ -37,12 +39,17 @@ class Env:
         # 2、目前对方所有子
         qipanNpOppo = qipanNp.copy()
         qipanNpOppo[qipanNpOppo==selfColor]=0
-        qipanNpOppo[qipanNpOppo==oppoColor]=-1
+        qipanNpOppo[qipanNpOppo==oppoColor]=1
+        # 3、目前可以下子的地方
+        qipanNpNull = qipanNp.copy()
+        qipanNpNull[:]=0
+        qipanNpNull[qipanNp==0]=1
+
         # TODO：暂时先做两个，后面的确实比较麻烦
-        ret = np.concatenate((qipanNpSelf,qipanNpOppo))
+        ret = np.stack((qipanNpSelf,qipanNpOppo,qipanNpNull), axis = -1)
         
         # 拍平
-        return ret.reshape(-1)
+        return ret
 
     # 返回两个值，一个处理后为了机器学习，一个原始为了getAllActions
     def reset(self):
@@ -50,7 +57,7 @@ class Env:
         self.lastWhiteReward = 0
         r = requests.get('http://weiqi_core:8080/start')
         status = r.json()
-        return self.getState(status),status
+        return self.getState(status)
 
     # 获得所有可以落子的地方，如果是不能落子的地方，就直接给一个惩罚吧
     def getAllActions(self,status):
@@ -91,11 +98,12 @@ class Env:
             reward += 100
             done = True
         # 第四个返回值到底是干啥的，先借用一下
-        return self.getState(status),reward,done,status
+        return self.getState(status),reward,done,{}
 
 if __name__ == '__main__':
     env = Env()
     s,sr = env.reset()
+    # print(s)
     env.step(43)
     env.step(44)
     _,r,_,_ = env.step(34)

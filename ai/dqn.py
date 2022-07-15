@@ -11,9 +11,10 @@ from collections import deque
 import sys
 sys.path.append('/ai')
 
-from env import Env
+# from env import Env
+from testEnv import Env
 
-EPISODES = 3000
+EPISODES = 30000
 
 class DQNAgent:
     def __init__(self, state_size, action_size):
@@ -102,6 +103,7 @@ if __name__ == "__main__":
     done = False
     batch_size = 128
 
+    loss = 0
     for e in range(EPISODES):
         state,stateRaw = env.reset()
         # 上来就是黑色
@@ -109,16 +111,9 @@ if __name__ == "__main__":
         lastState = None
         lastAction = None
         lastReward = 0
-        totalRewardBlack = 0
-        totalRewardWhite = 0
+        totalReward = 0
         for time in range(500):
             action = agent.act(state)
-            allowActions = env.getAllActions(stateRaw)
-            
-            if action not in allowActions:
-                # 如果下在不正确的位置上直接惩罚
-                agent.memorize(state,action,-100,state,False)
-                continue        
                     
             # 这是一个简单的范例，用于测试下面逻辑是否正确
             # 5,3;5,4;4,2;4,5;5,5;4,3;6,4;6,3;4,4;
@@ -128,7 +123,7 @@ if __name__ == "__main__":
             next_state, reward, done, next_stateRaw = env.step(action)
             # reward = reward if not done else -10
             # agent.memorize(state, action, reward, next_state, done)
-            
+            totalReward += reward
             if lastAction:
                 # if color == 0:
                     # 如果现在是下黑色，那么上一次应该是下白色，并且现在下完黑色的样子是下白色的下一状态
@@ -140,34 +135,18 @@ if __name__ == "__main__":
             
             if done:
                 agent.memorize(state,action,reward,next_state,done)
-                
-                if color == 1:
-                    totalRewardBlack += reward    
-                else:
-                    totalRewardWhite += reward
+                print(e,'total score:',totalReward,'time:',time,'epsilon:',agent.epsilon,'loss:',loss)
                 break
             lastAction = action
             lastState = state
             lastReward = reward
             state = next_state
             stateRaw = next_stateRaw
-            # change color
-            if color == 1:
-                totalRewardBlack += reward
-                color = 2
-            else:
-                totalRewardWhite += reward
-                color = 1
-
-        historyLoss = []
-        # 虽然但是还是每局结束学习一次把，ddqn再改进，先跑跑看
-        if len(agent.memory) > batch_size:
-            for i in range(5):
-                loss = agent.replay(batch_size)
-                historyLoss.append(loss)
-        print(e,'black score:',totalRewardBlack,'white score:',totalRewardWhite,time,historyLoss)
         
-        if e % 5 == 0:
+            if len(agent.memory) > batch_size:
+                loss = agent.replay(batch_size)
+        
+        if e % 20 == 0:
             agent.update_tModel()
             agent.save("/ai/mod/dqn.h5")
             print('update_tModel')
