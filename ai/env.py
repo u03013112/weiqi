@@ -57,10 +57,12 @@ class Env(gym.Env):
         self.lastWhiteReward = 0
         r = requests.get('http://weiqi_core:8080/start')
         status = r.json()
+        self.status = status
         return self.getState(status)
 
     # 获得所有可以落子的地方，如果是不能落子的地方，就直接给一个惩罚吧
-    def getAllActions(self,status):
+    def getAllActions(self):
+        status = self.status
         actions = []
         qipan = status['qipan']
         for x in range(8):
@@ -71,6 +73,10 @@ class Env(gym.Env):
 
     # return next_state, reward, done, _
     def step(self,action):
+        aActions = self.getAllActions()
+        if action not in aActions:
+            return self.getState(self.status),-100,False,{'err':True}
+
         # action 是0~63
         x = action/8
         y = action%8
@@ -83,6 +89,7 @@ class Env(gym.Env):
         }
         r = requests.post('http://weiqi_core:8080/do', json=body,headers=headers)
         status = r.json()
+        self.status = status
 
         reward = 0
         if status['status'] == 'turn1':
@@ -100,12 +107,18 @@ class Env(gym.Env):
         # 第四个返回值到底是干啥的，先借用一下
         return self.getState(status),reward,done,{}
 
+from stable_baselines3.common.env_checker import check_env
 if __name__ == '__main__':
-    env = Env()
-    s,sr = env.reset()
-    # print(s)
-    env.step(43)
-    env.step(44)
-    _,r,_,_ = env.step(34)
-    print(r)
+    # env = Env()
+    # s,sr = env.reset()
+    # # print(s)
+    # env.step(43)
+    # env.step(44)
+    # _,r,_,_ = env.step(34)
+    # print(r)
     # print(env.getAllActions(s))
+    env = Env()
+    # check_env(env)
+    env.reset()
+    print(env.getAllActions())
+    print(env.step(27))
